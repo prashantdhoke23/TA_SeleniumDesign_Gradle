@@ -1,0 +1,38 @@
+plugins {
+    id("java")
+    id("application")
+}
+
+group = "com.qa"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri(project.property("githubRepoUrl") as String)
+        credentials {
+            username = project.property("githubUsername") as String
+            password = project.property("githubPassword") as String
+        }
+    }
+
+}
+
+dependencies {
+    // --- Framework and Core Dependencies (using 'implementation') ---
+    implementation("org.seleniumhq.selenium:selenium-java:4.22.0")
+    implementation("com.qa:ta-automation:0.1.5")
+
+    // CRITICAL FIX: Changed to 'implementation' so TestNG and Extent Reports
+    // are on the primary classpath, ensuring the Listener and TestNG runner are found.
+    implementation("org.testng:testng:7.10.2")
+    implementation("com.aventstack:extentreports:5.1.1")
+
+}
+
+tasks.test {
+    useTestNG(){
+        suites("testng.xml") // Assumes testng.xml is in the project root
+    }
+}
+
