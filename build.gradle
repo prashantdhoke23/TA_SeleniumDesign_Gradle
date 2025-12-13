@@ -31,8 +31,23 @@ dependencies {
 }
 
 tasks.test {
-    useTestNG(){
-        suites("testng.xml") // Assumes testng.xml is in the project root
+    // 1. Check if an XML suite path is provided via the command line
+    // 1. Check if an XML suite path is provided via the command line
+    if (project.hasProperty('suiteXml')) {
+        useTestNG() {
+            // Use the path provided by the command line argument
+            suites(project.getProperty('suiteXml'))
+
+            // 2. Explicitly set the TestNG output directory to a common location
+            options {
+                outputDirectory = file("${buildDir}/test-reports")
+            }
+        }
+    } else {
+        // Fallback for running locally without a property
+        useTestNG() {
+            suites("testng.xml")
+        }
     }
 }
 
