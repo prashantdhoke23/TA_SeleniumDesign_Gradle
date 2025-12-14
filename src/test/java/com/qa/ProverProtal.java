@@ -2,6 +2,8 @@ package com.qa;
 
 import org.testng.annotations.Test;
 
+
+//Ignore
 public class ProverProtal extends BaseTest {
 
     @Test
