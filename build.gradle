@@ -9,13 +9,22 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
     maven {
-        url = uri(project.property("githubRepoUrl") as String)
-        credentials {
-            username = project.property("githubUsername") as String
-            password = project.property("githubPassword") as String
-        }
-    }
+        // --- START OF CHANGE: Reading Environment Variables ---
 
+        // 1. Read the GITHUB_REPO_URL from the Jenkins Environment Variable (e.g., set by Environment Injector)
+        // Fallback to project property if running locally
+        def repoUrl = System.getenv('GITHUB_REPO_URL') ?: project.findProperty('githubRepoUrl')
+
+        url = uri(repoUrl as String)
+
+        credentials {
+            // 2. Read Username/Password from Jenkins Environment Variables
+            //    (assuming you named them GITHUB_USERNAME and GITHUB_PASSWORD)
+            username = System.getenv('GITHUB_USERNAME') ?: project.findProperty('githubUsername') as String
+            password = System.getenv('GITHUB_PASSWORD') ?: project.findProperty('githubPassword') as String
+        }
+        // --- END OF CHANGE: Reading Environment Variables ---
+    }
 }
 
 dependencies {
@@ -23,22 +32,19 @@ dependencies {
     implementation("org.seleniumhq.selenium:selenium-java:4.22.0")
     implementation("com.qa:ta-automation:0.1.5")
 
-    // CRITICAL FIX: Changed to 'implementation' so TestNG and Extent Reports
-    // are on the primary classpath, ensuring the Listener and TestNG runner are found.
     implementation("org.testng:testng:7.10.2")
     implementation("com.aventstack:extentreports:5.1.1")
 
 }
 
 tasks.test {
-    // 1. Check if an XML suite path is provided via the command line
-    // 1. Check if an XML suite path is provided via the command line
+    // This section is fine as it uses the '-PsuiteXml' property, which is usually non-sensitive
+    // If you wanted to make 'suiteXml' an environment variable (e.g., SUITE_XML), you'd
+    // update this section similarly, but keeping it as a project property is clean.
     if (project.hasProperty('suiteXml')) {
         useTestNG() {
-            // Use the path provided by the command line argument
             suites(project.getProperty('suiteXml'))
 
-            // 2. Explicitly set the TestNG output directory to a common location
             options {
                 outputDirectory = file("${buildDir}/test-reports")
             }
@@ -50,4 +56,3 @@ tasks.test {
         }
     }
 }
-
