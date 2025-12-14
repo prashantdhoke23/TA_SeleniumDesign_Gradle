@@ -9,21 +9,23 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
     maven {
-        // --- START OF CHANGE: Reading Environment Variables ---
+        // --- FIX: Use project.findProperty() to read the Jenkins-injected properties ---
 
-        // 1. Read the GITHUB_REPO_URL from the Jenkins Environment Variable (e.g., set by Environment Injector)
-        // Fallback to project property if running locally
-        def repoUrl = System.getenv('GITHUB_REPO_URL') ?: project.findProperty('githubRepoUrl')
+        // The key is to use project.findProperty() for all variables
+        def repoUrl = project.findProperty('githubRepoUrl')
+
+        // CRITICAL: Ensure repoUrl is not null before calling uri()
+        if (repoUrl == null) {
+            throw new GradleException("The 'githubRepoUrl' property is missing. Please check your Jenkins 'Properties Content' configuration.")
+        }
 
         url = uri(repoUrl as String)
 
         credentials {
-            // 2. Read Username/Password from Jenkins Environment Variables
-            //    (assuming you named them GITHUB_USERNAME and GITHUB_PASSWORD)
-            username = System.getenv('GITHUB_USERNAME') ?: project.findProperty('githubUsername') as String
-            password = System.getenv('GITHUB_PASSWORD') ?: project.findProperty('githubPassword') as String
+            // Read from the injected Project Properties
+            username = project.findProperty('githubUsername') as String
+            password = project.findProperty('githubPassword') as String
         }
-        // --- END OF CHANGE: Reading Environment Variables ---
     }
 }
 
